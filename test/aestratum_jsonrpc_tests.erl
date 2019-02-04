@@ -310,6 +310,7 @@ invalid_submit_param() ->
          {[<<"user1">>, ?HEX_INVALID_16, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
          {[<<"user1">>, ?HEX_VALID_16, <<>>, lists:seq(1, 42)], miner_nonce},
          {[<<"user1">>, ?HEX_VALID_16, <<"0">>, lists:seq(1, 42)], miner_nonce},
+         {[<<"user1">>, ?HEX_VALID_16, <<"012">>, lists:seq(1, 42)], miner_nonce},
          {[<<"user1">>, ?HEX_VALID_16, null, lists:seq(1, 42)], miner_nonce},
          {[<<"user1">>, ?HEX_VALID_16, [], lists:seq(1, 42)], miner_nonce},
          {[<<"user1">>, ?HEX_VALID_16, ?HEX_INVALID_8, lists:seq(1, 42)], miner_nonce},
@@ -425,6 +426,7 @@ invalid_success_result_param(subscribe) ->
          {[?HEX_VALID_16, ?HEX_INVALID_16], extra_nonce},
          {[?HEX_VALID_16, <<>>], extra_nonce},
          {[?HEX_VALID_16, <<"0">>], extra_nonce},
+         {[?HEX_VALID_16, <<"12345">>], extra_nonce},  % byte_size must be even number
          {[?HEX_VALID_16, ?HEX_INVALID_8], extra_nonce},
          {[?HEX_VALID_16, ?HEX_VALID_16], extra_nonce}],
     [{T, bin(B, P), M#{method => subscribe, result => P},
@@ -516,11 +518,11 @@ valid_req() ->
             password => <<"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef">>}},
          %% submit
          {<<"{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"mining.submit\",\"params\":["
-            "\"ae_user\",\"ABCDEF0123456789\",\"0123456789ABC\",["
+            "\"ae_user\",\"ABCDEF0123456789\",\"1234567890AB\",["
             "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,"
             "31,32,33,34,35,36,37,38,39,40,41,42]]}">>,
           #{type => req, method => submit, id => 4, user => <<"ae_user">>,
-            job_id => <<"abcdef0123456789">>, miner_nonce => <<"0123456789abc">>,
+            job_id => <<"abcdef0123456789">>, miner_nonce => <<"1234567890ab">>,
             pow => lists:seq(1, 42)}},
          %% reconnect
          {<<"{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"client.reconnect\",\"params\":[]}">>,
