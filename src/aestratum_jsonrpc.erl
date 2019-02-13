@@ -2,7 +2,9 @@
 
 -export([decode/1, decode/2,
          encode/1, encode/2,
-         validate_rsp/2, validate_rsp/3
+         validate_rsp/2, validate_rsp/3,
+         next_id/1, next_id/2,
+         to_id/1, to_id/2
         ]).
 
 -define(ID_MIN, 0).
@@ -301,6 +303,38 @@ validate_rsp(Method, #{error := Error} = Rsp, Opts) ->
         throw:{validation_error, Rsn} ->
             validation_error(Rsn, #{op => validate_rsp, map => Rsp}, Opts)
     end.
+
+-spec next_id(id()) -> id().
+next_id(Id) when is_integer(Id) ->
+    next_id(Id, #{}).
+
+%% The id_min can be any number non negative number smaller than id_max.
+%% NOTE: The id_max must be a number which has in base 2 all bits set to 1.
+%% For example, the id_max can be: 16#f, 16#ff, 16#ffffffff. The id_max,
+%% for example, cannot be: 16#abc, 16#ff0.
+-spec next_id(id(), opts()) -> id().
+next_id(Id, Opts) when is_integer(Id) ->
+    Min = maps:get(id_min, Opts, ?ID_MIN),
+    Max = maps:get(id_max, Opts, ?ID_MAX),
+    case ((Id + 1) band Max) of
+        0 -> Min;
+        N -> N
+    end.
+
+-spec to_id(term()) -> id() | null.
+to_id(Id) ->
+    to_id(Id, #{}).
+
+-spec to_id(term(), opts()) -> id() | null.
+to_id(Id, Opts) when is_integer(Id) ->
+    Min = maps:get(id_min, Opts, ?ID_MIN),
+    Max = maps:get(id_max, Opts, ?ID_MAX),
+    case is_id(Id, Min, Max) of
+        true  -> Id;
+        false -> null
+    end;
+to_id(_Id, _Opts) ->
+    null.
 
 %% Internal functions.
 

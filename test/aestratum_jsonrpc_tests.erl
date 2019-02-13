@@ -618,3 +618,39 @@ q(Xs) when is_list(Xs) ->
     Xs1 = lists:map(fun(Y) -> q(Y) end, Xs),
     list_to_binary([$[, lists:join($,, Xs1), $]]).
 
+id_test_() ->
+    [next_id(default),
+     next_id(with_opts),
+     to_id(default),
+     to_id(with_opts)].
+
+next_id(default) ->
+    T = <<"next id - default">>,
+    L = [{0, 1}, {1, 2}, {10, 11}, {16#ffffffff, 0}, {16#fffffffffffff, 0}],
+    [{T, ?_assertEqual(E, ?TEST_MODULE:next_id(I))} || {I, E} <- L];
+next_id(with_opts) ->
+    T = <<"next id - with opts">>,
+    L = [{0, 1, #{id_min => 0, id_max => 16#ff}},
+         {16#fff, 10, #{id_min => 10, id_max => 16#fff}},
+         {1, 0, #{id_min => 0, id_max => 1}},
+         {0, 1, #{id_min => 0, id_max => 1}},
+         {16#f, 16#a, #{id_min => 16#a, id_max => 16#f}}],
+    [{T, ?_assertEqual(E, ?TEST_MODULE:next_id(I, O))} || {I, E, O} <- L].
+
+to_id(default) ->
+    T = <<"to id - default">>,
+    L = [{foo, null}, {[], null}, {<<>>, null}, {-100, null}, {0.0, null},
+         {1.0, null}, {{a, b, c}, null}, {16#fffffffffffffff, null},
+         {1, 1}, {100, 100}, {16#ffffffff, 16#ffffffff}],
+    [{T, ?_assertEqual(E, ?TEST_MODULE:to_id(I))} || {I, E} <- L];
+to_id(with_opts) ->
+    T = <<"to id - with opts">>,
+    L = [{0, 0, #{id_min => 0, id_max => 1}},
+         {1, 1, #{id_min => 0, id_max => 1}},
+         {16#11, null, #{id_min => 10, id_max => 16#f}},
+         {16#e, 16#e, #{id_min => 16#e, id_max => 16#f}},
+         {1000, 1000, #{id_min => 100, id_max => 16#ffffffff}},
+         {16#ffffffffffff, null, #{id_min => 100, id_max => 16#ffffffff}},
+         {99, null, #{id_min => 100, id_max => 16#ffffffff}}],
+    [{T, ?_assertEqual(E, ?TEST_MODULE:to_id(I, O))} || {I, E, O} <- L].
+
