@@ -277,12 +277,12 @@ invalid_authorize_param() ->
     I = 1,
     M = #{type => req, id => I, method => authorize},
     L =
-        [{[<<>>, ?HEX_VALID_64], user},
-         {[null, ?HEX_VALID_64], user},
-         {[<<"user ">>, ?HEX_VALID_64], user},
-         {[<<"\t\t\s\v">>, ?HEX_VALID_64], user},
-         {[1234, ?HEX_VALID_64], user},
-         {[binary:copy(<<$a>>, 65), ?HEX_VALID_64], user},
+        [{[<<>>, null], user},
+         {[null, null], user},
+         {[<<"user ">>, null], user},
+         {[<<"\t\t\s\v">>, null], user},
+         {[1234, null], user},
+         {[binary:copy(<<$a>>, 65), null], user},
          {[<<"user1">>, <<>>], password},
          {[<<"user1">>, 1324], password},
          {[<<"user1">>, <<"X">>], password},
@@ -513,9 +513,9 @@ valid_req() ->
             session_id => <<"0123456789abcdef">>, host => <<"aepool.com">>, port => 9876}},
          %% authorize
          {<<"{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"mining.authorize\",\"params\":["
-            "\"ae_user\",\"0123456789aBcDeF0123456789abcdef0123456789abcdef0123456789abcdef\"]}">>,
+            "\"ae_user\",null]}">>,
           #{type => req, method => authorize, id => 3, user => <<"ae_user">>,
-            password => <<"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef">>}},
+            password => null}},
          %% submit
          {<<"{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"mining.submit\",\"params\":["
             "\"ae_user\",\"ABCDEF0123456789\",\"1234567890AB\",["

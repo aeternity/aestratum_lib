@@ -21,8 +21,6 @@
 
 -define(SESSION_ID_SIZE, 16).
 
--define(PASSWORD_SIZE, 64).
-
 -define(TARGET_SIZE, 64).
 
 -define(JOB_ID_SIZE, 16).
@@ -176,8 +174,8 @@
 
 -type user()            :: binary().
 
--type password()        :: binary().
-                %% TODO: | null
+-type password()        :: binary()
+                         | null.
 
 -type job_id()          :: binary().
 
@@ -762,19 +760,44 @@ is_user(User, MaxSize) ->
             false
     end.
 
-check_password(Password, Opts) when is_binary(Password) ->
-    Size = maps:get(password_size, Opts, ?PASSWORD_SIZE),
-    case is_password(Password, Size) of
+check_password(Password, Opts) ->
+    Size = maps:get(password_size, Opts, undefined),
+    MinSize = maps:get(password_max_size, Opts, undefined),
+    MaxSize = maps:get(password_max_size, Opts, undefined),
+    IsPassword =
+        case {Size, MinSize, MaxSize} of
+            {undefined, undefined, undefined} ->
+                is_password(Password);
+            {S, undefined, undefined} when is_integer(S) ->
+                is_password(Password, S);
+            {undefined, MinS, MaxS} when
+                  is_integer(MinS) and is_integer(MaxS) ->
+                is_password(Password, MinS, MaxS)
+        end,
+    case IsPassword of
         true  -> ok;
         false -> validation_exception({param, password})
     end;
 check_password(_Password, _Opts) ->
     validation_exception({param, password}).
 
+is_password(null) ->
+    true;
+is_password(_Other) ->
+    false.
+
 is_password(Password, Size) when byte_size(Password) =:= Size ->
-    is_hex(Password);
+    is_hex(Password);  %% Password is a hash
 is_password(_Password, _Size) ->
     false.
+
+is_password(Password, MinSize, MaxSize) ->
+    case byte_size(Password) of
+        N when (N >= MinSize) and (N =< MaxSize) ->
+            is_valid_string(Password);
+        _Other ->
+            false
+    end.
 
 check_target(Target, Opts) when is_binary(Target) ->
     Size = maps:get(target_size, Opts, ?TARGET_SIZE),
