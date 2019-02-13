@@ -159,7 +159,7 @@
                              reason        => error_reason(),
                              data          => error_data()}.
 
--type id()              :: ?ID_MIN..?ID_MAX.
+-type id()              :: non_neg_integer().
 
 -type user_agent()      :: binary().
 
@@ -169,7 +169,7 @@
 -type host()            :: binary()
                          | null.
 
--type integer_port()    :: ?PORT_MIN..?PORT_MAX.
+-type integer_port()    :: non_neg_integer().
 
 -type maybe_null_port() :: integer_port()
                          | null.
@@ -181,7 +181,7 @@
 
 -type job_id()          :: binary().
 
--type block_version()   :: ?BLOCK_VERSION_MIN..?BLOCK_VERSION_MAX.
+-type block_version()   :: pos_integer().
 
 -type block_hash()      :: binary().
 
@@ -189,13 +189,13 @@
 
 -type extra_nonce()     :: binary().
 
--type pow()             :: [?POW_NUMBER_MIN..?POW_NUMBER_MAX].
+-type pow()             :: [non_neg_integer()].
 
 -type target()          :: binary().
 
 -type empty_queue()     :: boolean().
 
--type wait_time()       :: ?WAIT_TIME_MIN..?WAIT_TIME_MAX
+-type wait_time()       :: non_neg_integer()
                          | null.
 
 -type rsp_method()      :: configure
@@ -882,9 +882,7 @@ is_part_nonce(PartNonce, NonceSize) ->
             is_even(N) andalso is_hex(PartNonce);
         _Other ->
             false
-    end;
-is_part_nonce(_PartNonce, _NonceSize) ->
-    false.
+    end.
 
 check_pow(Pow, Opts) when is_list(Pow) ->
     Size = maps:get(pow_size, Opts, ?POW_SIZE),
