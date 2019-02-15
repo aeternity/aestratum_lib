@@ -15,7 +15,12 @@
 -define(PORT_MIN, 1).
 -define(PORT_MAX, 16#ffff).
 
--define(USER_MAX_SIZE, 64).
+%% By default, the user name is a Base58check encoded account address. It has
+%% a variable length, between 41 and 53 bytes including the 'ak_' prefix.
+%% The shortest encoding of a 32-byte byte array is 41 (all zeros so it is not
+%% a valid address though) and the max is 53.
+-define(USER_MIN_SIZE, 41).
+-define(USER_MAX_SIZE, 53).
 
 -define(USER_AGENT_MAX_SIZE, 64).
 
@@ -740,22 +745,22 @@ is_port(Port, Min, Max) when (Port > Min) and (Port =< Max) ->
 is_port(_Port, _Min, _Max) ->
     false.
 
-%% User can either have user_max_size or user_size (for fixed lenght size). The
-%% default is user_max_size.
 check_user(User, Opts) when is_binary(User) ->
-    %% TODO: user_size
+    %% TODO: consider other options for user, this only works for base58c user
+    %% accounts.
+    MinSize = maps:get(user_min_size, Opts, ?USER_MIN_SIZE),
     MaxSize = maps:get(user_max_size, Opts, ?USER_MAX_SIZE),
-    case is_user(User, MaxSize) of
+    case is_user(User, MinSize, MaxSize) of
         true  -> ok;
         false -> validation_exception({param, user})
     end;
 check_user(_User, _Opts) ->
     validation_exception({param, user}).
 
-is_user(User, MaxSize) ->
+is_user(User, MinSize, MaxSize) ->
     case byte_size(User) of
-        N when (N > 0) and (N =< MaxSize) ->
-            is_valid_string(User);
+        N when (N >= MinSize) and (N =< MaxSize) ->
+            is_valid_account(User);
         _Other ->
             false
     end.
@@ -777,9 +782,7 @@ check_password(Password, Opts) ->
     case IsPassword of
         true  -> ok;
         false -> validation_exception({param, password})
-    end;
-check_password(_Password, _Opts) ->
-    validation_exception({param, password}).
+    end.
 
 is_password(null) ->
     true;
@@ -1054,6 +1057,9 @@ is_valid_string(Bin) when is_binary(Bin) ->
                  (Byte) when Byte =:= $\f -> false;
                  (Byte) when Byte =:= $\r -> false;
                  (_Byte) -> true end, binary_to_list(Bin)).
+
+is_valid_account(<<"ak_", Base58/binary>>) ->
+    base58:check_base58(binary_to_list(Base58)).
 
 lowercase(Bin) when is_binary(Bin) ->
     string:lowercase(Bin);

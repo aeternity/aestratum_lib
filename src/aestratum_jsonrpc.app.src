@@ -5,7 +5,8 @@
   {applications,
    [kernel,
     stdlib,
-    jsx
+    jsx,
+    base58
    ]},
   {env,[]},
   {modules, []},
