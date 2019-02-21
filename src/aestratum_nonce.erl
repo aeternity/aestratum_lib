@@ -130,8 +130,10 @@ to_hex(Nonce) ->
 
 -spec to_int(hex_nonce()) -> int_nonce().
 to_int(Bin) when (byte_size(Bin) =:= (?NONCE_NBYTES * 2)) ->
-    %% TODO: check is_hex
-    to_int1(Bin);
+    case aestratum_utils:is_hex(Bin) of
+        true  -> to_int1(Bin);
+        false -> erlang:error(badarg, [Bin])
+    end;
 to_int(Bin) ->
     erlang:error(badarg, [Bin]).
 
@@ -141,7 +143,10 @@ to_int(Type, Bin, NBytes) when
       ((NBytes >= ?MIN_PART_NONCE_NBYTES) and
        (NBytes =< ?MAX_PART_NONCE_NBYTES)) ->
     %% TODO: check is_hex
-    to_int1(Bin);
+    case aestratum_utils:is_hex(Bin) of
+        true  -> to_int1(Bin);
+        false -> erlang:error(badarg, [Type, Bin, NBytes])
+    end;
 to_int(Type, Bin, NBytes) ->
     erlang:error(badarg, [Type, Bin, NBytes]).
 

@@ -1043,20 +1043,11 @@ error_code_to_reason(_Code)  -> validation_exception({param, error_code}).
 is_even(X) when X >= 0 ->
     (X band 1) =:= 0.
 
-is_hex(Bin) when is_binary(Bin) ->
-    lists:all(fun(Byte) when Byte >= $0, Byte =< $9 -> true;
-                 (Byte) when Byte >= $a, Byte =< $f -> true;
-                 (Byte) when Byte >= $A, Byte =< $F -> true;
-                 (_Byte) -> false end, binary_to_list(Bin)).
+is_hex(Bin) ->
+    aestratum_utils:is_hex(Bin).
 
-is_valid_string(Bin) when is_binary(Bin) ->
-    lists:all(fun(Byte) when Byte =:= $\s -> false;
-                 (Byte) when Byte =:= $\n -> false;
-                 (Byte) when Byte =:= $\t -> false;
-                 (Byte) when Byte =:= $\v -> false;
-                 (Byte) when Byte =:= $\f -> false;
-                 (Byte) when Byte =:= $\r -> false;
-                 (_Byte) -> true end, binary_to_list(Bin)).
+is_valid_string(Bin) ->
+    aestratum_utils:is_valid_string(Bin).
 
 is_valid_account(<<"ak_", Base58/binary>>) ->
     base58:check_base58(binary_to_list(Base58)).
