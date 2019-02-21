@@ -1,5 +1,5 @@
-{application, aestratum_jsonrpc,
- [{description, "Aeternity Stratum JSON-RPC encoder/decoder"},
+{application, aestratum_lib,
+ [{description, "Aeternity Stratum library"},
   {vsn, "0.1.0"},
   {registered, []},
   {applications,
