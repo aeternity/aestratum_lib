@@ -24,7 +24,9 @@ nonce_test_() ->
      value(badarg),
      value(valid),
      nbytes(badarg),
-     nbytes(valid)].
+     nbytes(valid),
+     complement_nbytes(badarg),
+     complement_nbytes(valid)].
 
 new(badarg_nonce) ->
     L = [atom, [], -1, -1.0, <<>>, 16#ffffffffffffffff + 1],
@@ -134,4 +136,12 @@ nbytes(valid) ->
     [?_assertEqual(8, ?TEST_MODULE:nbytes(?TEST_MODULE:new(123456))),
      ?_assertEqual(3, ?TEST_MODULE:nbytes(?TEST_MODULE:new(miner, 1000, 3))),
      ?_assertEqual(1, ?TEST_MODULE:nbytes(?TEST_MODULE:new(miner, 120, 1)))].
+
+complement_nbytes(badarg) ->
+    L = [xyz, [foo, bar], 10, <<"binary">>],
+    [?_assertException(error, badarg, ?TEST_MODULE:complement_nbytes(I)) || I <- L];
+complement_nbytes(valid) ->
+    [?_assertEqual(0, ?TEST_MODULE:complement_nbytes(?TEST_MODULE:new(5324))),
+     ?_assertEqual(7, ?TEST_MODULE:complement_nbytes(?TEST_MODULE:new(extra, 123, 1))),
+     ?_assertEqual(1, ?TEST_MODULE:complement_nbytes(?TEST_MODULE:new(miner, 539932, 7)))].
 

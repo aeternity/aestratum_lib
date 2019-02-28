@@ -9,7 +9,8 @@
          merge/2,
          type/1,
          value/1,
-         nbytes/1
+         nbytes/1,
+         complement_nbytes/1
         ]).
 
 -export_type([nonce/0,
@@ -64,7 +65,8 @@
 
 -type int_nonce()        :: ?MIN_NONCE..?MAX_NONCE.
 
--type nbytes()           :: ?NONCE_NBYTES.
+-type nbytes()           :: ?NONCE_NBYTES
+                          | 0.
 
 -type part_type()        :: extra
                           | miner.
@@ -196,6 +198,15 @@ nbytes(#nonce{}) ->
 nbytes(#part_nonce{nbytes = NBytes}) ->
     NBytes;
 nbytes(PartNonce) ->
+    erlang:error(badarg, [PartNonce]).
+
+-spec complement_nbytes(nonce()) -> nbytes();
+                       (part_nonce()) -> part_nbytes().
+complement_nbytes(#nonce{}) ->
+    0;
+complement_nbytes(#part_nonce{nbytes = NBytes}) ->
+    ?NONCE_NBYTES - NBytes;
+complement_nbytes(PartNonce) ->
     erlang:error(badarg, [PartNonce]).
 
 %% Internal functions.
