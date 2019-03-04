@@ -1,10 +1,6 @@
 -module(aestratum_target).
 
 %% TODO: eunit
-%% TODO: type spec
-
-%% this should be included from a dependency - aeminer?
--define(MAX_TARGET, 16#ffff000000000000000000000000000000000000000000000000000000000000).
 
 -export([recalculate/3,
          diff/2,
@@ -13,6 +9,21 @@
          to_int/1
         ]).
 
+-include_lib("aeminer/include/aeminer.hrl").
+
+-define(MAX_TARGET, ?HIGHEST_TARGET_INT).
+
+-type int_target()     :: aeminer_pow:int_target().
+
+-type bin_target()     :: aeminer_pow:bin_target().
+
+-type prev_target()    :: {int_target(), solve_time()}.
+
+-type solve_time()     :: pos_integer().
+
+-type percent_change() :: float().
+
+-spec recalculate([prev_target()], solve_time(), int_target()) -> int_target().
 recalculate(PrevTargets, DesiredSolveTime, MaxTarget) when
       PrevTargets =/= [] ->
     N = length(PrevTargets),
@@ -28,6 +39,8 @@ recalculate(PrevTargets, DesiredSolveTime, MaxTarget) when
 recalculate([], _DesiredSolveTime, MaxTarget) ->
     MaxTarget.
 
+-spec diff(int_target(), int_target()) ->
+    {increase | decrease, percent_change()} | no_change.
 diff(NewTarget, OldTarget) when NewTarget > OldTarget ->
     {increase, (NewTarget - OldTarget) / OldTarget * 100};
 diff(NewTarget, OldTarget) when NewTarget < OldTarget ->
@@ -35,12 +48,15 @@ diff(NewTarget, OldTarget) when NewTarget < OldTarget ->
 diff(Target, Target) ->
     no_change.
 
+-spec max() -> int_target().
 max() ->
     ?MAX_TARGET.
 
+-spec to_hex(int_target()) -> bin_target().
 to_hex(Target) ->
     iolist_to_binary(io_lib:format("~64.16.0b", [Target])).
 
+-spec to_int(bin_target()) -> int_target().
 to_int(Bin) ->
     binary_to_integer(Bin, 16).
 

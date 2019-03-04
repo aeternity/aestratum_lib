@@ -6,7 +6,8 @@
    [kernel,
     stdlib,
     jsx,
-    base58
+    base58,
+    aeminer
    ]},
   {env,[]},
   {modules, []},

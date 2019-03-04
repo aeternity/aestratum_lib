@@ -23,6 +23,8 @@
               part_nbytes/0
              ]).
 
+-include_lib("aeminer/include/aeminer.hrl").
+
 -record(nonce, {
           value  :: int_nonce()
          }).
@@ -32,11 +34,6 @@
           value  :: part_int_nonce(),
           nbytes :: part_nbytes()
          }).
-
--define(MIN_NONCE, 0).
--define(MAX_NONCE, 16#ffffffffffffffff).
-
--define(NONCE_NBYTES, 8).
 
 -define(MIN_PART_NONCE, 0).
 -define(MAX_PART_NONCE_1, 16#ff).
@@ -61,9 +58,10 @@
 
 -opaque part_nonce()     :: #part_nonce{}.
 
--type hex_nonce()        :: binary().
+%% 1 byte = 2 chars in hex, 8 bits in byte.
+-type hex_nonce()        :: <<_:((?NONCE_NBYTES * 2) * 8)>>.
 
--type int_nonce()        :: ?MIN_NONCE..?MAX_NONCE.
+-type int_nonce()        :: aeminer_pow:nonce().
 
 -type nbytes()           :: ?NONCE_NBYTES
                           | 0.

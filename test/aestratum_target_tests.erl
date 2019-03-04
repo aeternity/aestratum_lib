@@ -3,7 +3,8 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -define(TEST_MODULE, aestratum_target).
--define(MAX_TARGET, 16#ffff000000000000000000000000000000000000000000000000000000000000).
+
+-define(MAX_TARGET, ?TEST_MODULE:max()).
 
 %recalculate(PrevTargets, DesiredSolveTime, MaxTarget) when
 
