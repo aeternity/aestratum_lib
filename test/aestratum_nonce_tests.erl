@@ -19,6 +19,8 @@ nonce_test_() ->
      max(badarg),
      merge(badarg),
      merge(valid),
+     split(badarg),
+     split(valid),
      type(badarg),
      type(valid),
      value(badarg),
@@ -112,6 +114,24 @@ merge(valid) ->
           ?TEST_MODULE:new(extra, 16#10203040, 4),
           16#10203040a0b0c0d0}],
     [?_assertEqual(R, ?TEST_MODULE:value(?TEST_MODULE:merge(P1, P2))) || {P1, P2, R} <- L].
+
+split(badarg) ->
+    L = [{atom, <<>>}, {foo, bar}, {123, 456}],
+    [?_assertException(error, badarg, ?TEST_MODULE:split(S, N)) || {S, N} <- L];
+split(valid) ->
+    L = [{{extra, 4}, ?TEST_MODULE:new(0),
+          {?TEST_MODULE:new(extra, 0, 4),
+           ?TEST_MODULE:new(miner, 0, 4)}},
+         {{miner, 2}, ?TEST_MODULE:new(1),
+          {?TEST_MODULE:new(extra, 0, 6),
+           ?TEST_MODULE:new(miner, 1, 2)}},
+         {{extra, 6}, ?TEST_MODULE:new(1),
+          {?TEST_MODULE:new(extra, 0, 6),
+           ?TEST_MODULE:new(miner, 1, 2)}},
+         {{miner, 4}, ?TEST_MODULE:new(16#10203040a0b0c0d0),
+          {?TEST_MODULE:new(extra, 16#10203040, 4),
+           ?TEST_MODULE:new(miner, 16#a0b0c0d0, 4)}}],
+    [?_assertEqual(R, ?TEST_MODULE:split(S, N)) || {S, N, R} <- L].
 
 type(badarg) ->
     L = [{}, <<>>, atom, ?TEST_MODULE:new(999)],

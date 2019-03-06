@@ -7,6 +7,7 @@
          to_int/3,
          max/1,
          merge/2,
+         split/2,
          type/1,
          value/1,
          nbytes/1,
@@ -173,6 +174,27 @@ merge(#part_nonce{type = extra, value = Value1, nbytes = NBytes1},
     #nonce{value = binary:decode_unsigned(Bin, little)};
 merge(PartNonce1, PartNonce2) ->
     erlang:error(badarg, [PartNonce1, PartNonce2]).
+
+-spec split({part_type(), part_nbytes()}, nonce()) ->
+    {part_nonce(), part_nonce()}.
+split({extra, ExtraNBytes}, #nonce{value = Value}) when
+      ((ExtraNBytes >= ?MIN_PART_NONCE_NBYTES) and
+       (ExtraNBytes =< ?MAX_PART_NONCE_NBYTES)) ->
+    MinerNBytes = ?NONCE_NBYTES - ExtraNBytes,
+    <<MinerNonce:MinerNBytes/binary, ExtraNonce:ExtraNBytes/binary>> =
+        <<Value:?NONCE_NBYTES/little-unit:8>>,
+    {new(extra, binary:decode_unsigned(ExtraNonce, little), ExtraNBytes),
+     new(miner, binary:decode_unsigned(MinerNonce, little), MinerNBytes)};
+split({miner, MinerNBytes}, #nonce{value = Value}) when
+      ((MinerNBytes >= ?MIN_PART_NONCE_NBYTES) and
+       (MinerNBytes =< ?MAX_PART_NONCE_NBYTES)) ->
+    ExtraNBytes = ?NONCE_NBYTES - MinerNBytes,
+    <<MinerNonce:MinerNBytes/binary, ExtraNonce:ExtraNBytes/binary>> =
+        <<Value:?NONCE_NBYTES/little-unit:8>>,
+    {new(extra, binary:decode_unsigned(ExtraNonce, little), ExtraNBytes),
+     new(miner, binary:decode_unsigned(MinerNonce, little), MinerNBytes)};
+split(Split, Nonce) ->
+    erlang:error(badarg, [Split, Nonce]).
 
 -spec type(part_nonce()) -> part_type().
 type(#part_nonce{type = Type}) ->
