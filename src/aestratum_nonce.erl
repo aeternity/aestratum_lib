@@ -6,6 +6,7 @@
          to_int/1,
          to_int/3,
          max/1,
+         max_value/1,
          merge/2,
          split/2,
          type/1,
@@ -160,6 +161,15 @@ max(5) -> ?MAX_PART_NONCE_5;
 max(6) -> ?MAX_PART_NONCE_6;
 max(7) -> ?MAX_PART_NONCE_7;
 max(NBytes) -> erlang:error(badarg, [NBytes]).
+
+-spec max_value(nonce()) -> int_nonce();
+               (part_nonce()) -> part_int_nonce().
+max_value(#nonce{}) ->
+    ?MAX_NONCE;
+max_value(#part_nonce{nbytes = NBytes}) ->
+    max(NBytes);
+max_value(Nonce) ->
+    erlang:error(badarg, [Nonce]).
 
 -spec merge(part_nonce(), part_nonce()) -> nonce().
 merge(#part_nonce{type = miner, value = Value1, nbytes = NBytes1},

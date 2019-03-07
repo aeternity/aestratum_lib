@@ -17,6 +17,8 @@ nonce_test_() ->
      to_int(valid_nonce),
      to_int(valid_part_nonce),
      max(badarg),
+     max_value(badarg),
+     max_value(valid),
      merge(badarg),
      merge(valid),
      split(badarg),
@@ -86,6 +88,14 @@ to_int(valid_part_nonce) ->
 max(badarg) ->
     L = [0, -1, 1.0, not_int, 8],
     [?_assertException(error, badarg, ?TEST_MODULE:max(I)) || I <- L].
+
+max_value(badarg) ->
+    L = [atom, {foo, bar}, <<>>, []],
+    [?_assertException(error, badarg, ?TEST_MODULE:max_value(I)) || I <- L];
+max_value(valid) ->
+    L = [?TEST_MODULE:new(12345), ?TEST_MODULE:new(extra, 0, 3),
+         ?TEST_MODULE:new(miner, 1000, 4), ?TEST_MODULE:new(extra, 16#ff, 1)],
+    [?_assertMatch(X when is_integer(X), ?TEST_MODULE:max_value(I)) || I <- L].
 
 merge(badarg) ->
     L = [{0, 0}, {<<>>, []}, {1, 2},
