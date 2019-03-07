@@ -23,6 +23,7 @@ nonce_test_() ->
      merge(valid),
      split(badarg),
      split(valid),
+     update(badarg),
      type(badarg),
      type(valid),
      value(badarg),
@@ -142,6 +143,21 @@ split(valid) ->
           {?TEST_MODULE:new(extra, 16#10203040, 4),
            ?TEST_MODULE:new(miner, 16#a0b0c0d0, 4)}}],
     [?_assertEqual(R, ?TEST_MODULE:split(S, N)) || {S, N, R} <- L].
+
+update(badarg) ->
+    L = [{<<>>, foo}, {[1, 2], 100.0}, {{foo, bar}, "baz"},
+         {16#ff + 1, ?TEST_MODULE:new(miner, 16#ff, 1)},
+         {16#ffff12345, ?TEST_MODULE:new(extra, 0, 2)}],
+    [?_assertException(error, badarg, ?TEST_MODULE:update(V, N)) || {V, N} <- L];
+update(valid) ->
+    [?_assertEqual(
+        16#ff, ?TEST_MODULE:value(?TEST_MODULE:update(16#ff, ?TEST_MODULE:new(extra, 0, 1)))),
+     ?_assertEqual(
+        16#ff, ?TEST_MODULE:value(?TEST_MODULE:update(16#ff, ?TEST_MODULE:new(miner, 16#ff, 1)))),
+     ?_assertEqual(
+        0, ?TEST_MODULE:value(?TEST_MODULE:update(0, ?TEST_MODULE:new(extra, 100, 3)))),
+     ?_assertEqual(
+        1, ?TEST_MODULE:value(?TEST_MODULE:update(1, ?TEST_MODULE:new(miner, 16#ffffffffff, 5))))].
 
 type(badarg) ->
     L = [{}, <<>>, atom, ?TEST_MODULE:new(999)],

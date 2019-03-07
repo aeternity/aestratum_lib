@@ -9,6 +9,7 @@
          max_value/1,
          merge/2,
          split/2,
+         update/2,
          type/1,
          value/1,
          nbytes/1,
@@ -205,6 +206,15 @@ split({miner, MinerNBytes}, #nonce{value = Value}) when
      new(miner, binary:decode_unsigned(MinerNonce, little), MinerNBytes)};
 split(Split, Nonce) ->
     erlang:error(badarg, [Split, Nonce]).
+
+-spec update(part_int_nonce(), part_nonce()) -> part_nonce().
+update(Value, #part_nonce{nbytes = NBytes} = PartNonce) ->
+    case Value =< max(NBytes) of
+        true  -> PartNonce#part_nonce{value = Value};
+        false -> erlang:error(badarg, [Value])
+    end;
+update(Value, PartNonce) ->
+    erlang:error(badarg, [Value, PartNonce]).
 
 -spec type(part_nonce()) -> part_type().
 type(#part_nonce{type = Type}) ->
