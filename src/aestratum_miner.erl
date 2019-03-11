@@ -9,13 +9,28 @@
          repeats/1
         ]).
 
+-export_type([block_hash/0,
+              block_version/0,
+              target/0,
+              config/0,
+              exec/0,
+              exec_group/0,
+              extra_args/0,
+              hex_enc_header/0,
+              repeats/0,
+              instance/0,
+              instances/0,
+              edge_bits/0,
+              solution/0
+             ]).
+
+-type nonce()          :: aestratum_nonce:nonce().
+
 -type block_hash()     :: aeminer_pow_cuckoo:hashable().
 
 -type block_version()  :: pos_integer().
 
 -type target()         :: aeminer_pow:int_target().
-
--type nonce()          :: aestratum_nonce:nonce().
 
 -type config()         :: aeminer_pow_cuckoo:config().
 
