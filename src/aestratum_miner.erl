@@ -1,7 +1,9 @@
 -module(aestratum_miner).
 
 -export([generate/6,
-         verify/6
+         verify/6,
+         verify_proof/5,
+         get_target/2
         ]).
 
 -export([config/7,
@@ -68,12 +70,21 @@ verify(BlockHash, _BlockVersion, Nonce, Solution, Target, EdgeBits) ->
     Target1 = aeminer_pow:integer_to_scientific(Target),
     aeminer_pow_cuckoo:verify(BlockHash, Nonce1, Solution, Target1, EdgeBits).
 
-%% TODO: fix types in aeminer first
-%%-spec config(exec(), exec_group(), extra_args(), hex_enc_header(), repeats(),
-%%             edge_bits(), instances()) -> config().
+-spec verify_proof(block_hash(), block_version(), nonce(), solution(),
+                   edge_bits()) -> boolean().
+verify_proof(BlockHash, _BlockVersion, Nonce, Solution, EdgeBits) ->
+    Nonce1 = aestratum_nonce:value(Nonce),
+    aeminer_pow_cuckoo:verify_proof(BlockHash, Nonce1, Solution, EdgeBits).
+
+-spec get_target(solution(), edge_bits()) -> target().
+get_target(Solution, EdgeBits) ->
+    aeminer_pow_cuckoo:get_target(Solution, EdgeBits).
+
+-spec config(exec(), exec_group(), extra_args(), hex_enc_header(), repeats(),
+             edge_bits(), instances()) -> config().
 config(Exec, ExecGroup, ExtraArgs, HexEncHdr, Repeats, EdgeBits, Instances) ->
     aeminer_pow_cuckoo:config(
-      Exec, ExecGroup, ExtraArgs, HexEncHdr, Repeats,EdgeBits, Instances).
+      Exec, ExecGroup, ExtraArgs, HexEncHdr, Repeats, EdgeBits, Instances).
 
 -spec instances(config()) -> instances().
 instances(Config) ->

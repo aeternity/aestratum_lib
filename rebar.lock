@@ -10,7 +10,7 @@
   1},
  {<<"aeminer">>,
   {git,"https://github.com/aeternity/aeminer.git",
-      {ref,"82a7cb813a8c8728366a7f0e02d5b8f6c7711e94"}},
+      {ref,"05f68fab29a038c489a07920f280c67cd9306d3c"}},
   0},
  {<<"base58">>,
   {git,"https://github.com/aeternity/erl-base58.git",
