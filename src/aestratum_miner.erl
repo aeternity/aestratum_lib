@@ -34,8 +34,6 @@
 
 -type target()         :: aeminer_pow:int_target().
 
--type config()         :: aeminer_pow_cuckoo:config().
-
 -type exec()           :: aeminer_pow_cuckoo:exec().
 
 -type exec_group()     :: aeminer_pow_cuckoo:exec_group().
@@ -53,6 +51,8 @@
 -type edge_bits()      :: aeminer_pow_cuckoo:edge_bits().
 
 -type solution()       :: aeminer_pow_cuckoo:solution().
+
+-opaque config()       :: aeminer_pow_cuckoo:config().
 
 -spec generate(block_hash(), block_version(), target(), nonce(),
                instance(), config()) ->
