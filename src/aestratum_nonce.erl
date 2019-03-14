@@ -5,6 +5,8 @@
          to_hex/1,
          to_int/1,
          to_int/3,
+         is_valid_bin/1,
+         is_valid_bin/3,
          max/1,
          max_value/1,
          merge/2,
@@ -145,12 +147,32 @@ to_int(Type, Bin, NBytes) when
       ?IS_PART_NONCE_TYPE(Type) and (byte_size(Bin) =:= (NBytes * 2)) and
       ((NBytes >= ?MIN_PART_NONCE_NBYTES) and
        (NBytes =< ?MAX_PART_NONCE_NBYTES)) ->
-    %% TODO: check is_hex
     case aestratum_utils:is_hex(Bin) of
         true  -> to_int1(Bin);
         false -> erlang:error(badarg, [Type, Bin, NBytes])
     end;
 to_int(Type, Bin, NBytes) ->
+    erlang:error(badarg, [Type, Bin, NBytes]).
+
+-spec is_valid_bin(hex_nonce()) -> boolean().
+is_valid_bin(Bin) when is_binary(Bin) ->
+    case byte_size(Bin) =:= (?NONCE_NBYTES * 2) of
+        true  -> aestratum_utils:is_hex(Bin);
+        false -> false
+    end;
+is_valid_bin(Bin) ->
+    erlang:error(badarg, [Bin]).
+
+-spec is_valid_bin(part_type(), hex_nonce(), part_nbytes()) -> boolean().
+is_valid_bin(Type, Bin, NBytes) when
+      ?IS_PART_NONCE_TYPE(Type) and is_binary(Bin) and
+      ((NBytes >= ?MIN_PART_NONCE_NBYTES) and
+       (NBytes =< ?MAX_PART_NONCE_NBYTES)) ->
+    case (byte_size(Bin) =:= (NBytes * 2)) of
+        true  -> aestratum_utils:is_hex(Bin);
+        false -> false
+    end;
+is_valid_bin(Type, Bin, NBytes) ->
     erlang:error(badarg, [Type, Bin, NBytes]).
 
 -spec max(part_nbytes()) -> pos_integer().
@@ -253,10 +275,10 @@ complement_nbytes(PartNonce) ->
 
 to_hex1(Nonce, NBytes) ->
     <<begin
-            if N < 10 -> <<($0 + N)>>;
-               true   -> <<(87 + N)>>   %% 87 = ($a - 10)
-            end
-        end || <<N:4>> <= <<Nonce:NBytes/little-unit:8>>
+          if N < 10 -> <<($0 + N)>>;
+             true   -> <<(87 + N)>>   %% 87 = ($a - 10)
+          end
+      end || <<N:4>> <= <<Nonce:NBytes/little-unit:8>>
     >>.
 
 to_int1(Bin) ->

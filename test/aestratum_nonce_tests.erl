@@ -16,6 +16,10 @@ nonce_test_() ->
      to_int(badarg_part_nonce),
      to_int(valid_nonce),
      to_int(valid_part_nonce),
+     is_valid_bin(badarg_nonce),
+     is_valid_bin(valid_nonce),
+     is_valid_bin(badarg_part_nonce),
+     is_valid_bin(valid_part_nonce),
      max(badarg),
      max_value(badarg),
      max_value(valid),
@@ -85,6 +89,24 @@ to_int(valid_part_nonce) ->
     [?_assertEqual(0, ?TEST_MODULE:to_int(miner, <<"00">>, 1)),
      ?_assertEqual(16#ab, ?TEST_MODULE:to_int(miner, <<"ab000000">>, 4)),
      ?_assertEqual(16#1020304000, ?TEST_MODULE:to_int(miner, <<"0040302010">>, 5))].
+
+is_valid_bin(badarg_nonce) ->
+    L = [{foo, bar}, 10, atom, "", "11223344"],
+    [?_assertException(error, badarg, ?TEST_MODULE:is_valid_bin(B)) || B <- L];
+is_valid_bin(valid_nonce) ->
+    [?_assertEqual(false, ?TEST_MODULE:is_valid_bin(<<"112233445566778X">>)),
+     ?_assertEqual(true, ?TEST_MODULE:is_valid_bin(<<"1122334455667788">>))];
+is_valid_bin(badarg_part_nonce) ->
+    L = [{invalid_type, <<"11">>, 1}, {<<>>, 1, atom}, {1, foo, bar},
+         {miner, "1234", 4}, {extra, [], 5}, {miner, <<"1111">>, 8}],
+    [?_assertException(error, badarg, ?TEST_MODULE:is_valid_bin(T, B, N)) || {T, B, N} <- L];
+is_valid_bin(valid_part_nonce) ->
+    [?_assertEqual(false, ?TEST_MODULE:is_valid_bin(miner, <<"aabbccddeefX">>, 6)),
+     ?_assertEqual(false, ?TEST_MODULE:is_valid_bin(extra, <<"00112233">>, 7)),
+     ?_assertEqual(true, ?TEST_MODULE:is_valid_bin(miner, <<"aabbccddeeff">>, 6)),
+     ?_assertEqual(true, ?TEST_MODULE:is_valid_bin(extra, <<"00112233">>, 4)),
+     ?_assertEqual(true, ?TEST_MODULE:is_valid_bin(miner, <<"0F">>, 1)),
+     ?_assertEqual(true, ?TEST_MODULE:is_valid_bin(extra, <<"01020304050607">>, 7))].
 
 max(badarg) ->
     L = [0, -1, 1.0, not_int, 8],
