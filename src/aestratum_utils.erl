@@ -6,8 +6,12 @@
          is_valid_string/1
         ]).
 
+-export_type([timestamp/0]).
+
+-type timestamp() :: pos_integer().
+
 %% Timestamp in milliseconds.
--spec timestamp() -> pos_integer().
+-spec timestamp() -> timestamp().
 timestamp() ->
     {MegaSecs, Secs, MicroSecs} = os:timestamp(),
     (MegaSecs * 1000000 + Secs) * 1000 + erlang:trunc(MicroSecs / 1000).

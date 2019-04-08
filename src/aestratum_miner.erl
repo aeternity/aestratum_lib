@@ -23,7 +23,7 @@
               instance/0,
               instances/0,
               edge_bits/0,
-              solution/0
+              pow/0
              ]).
 
 -type nonce()          :: aestratum_nonce:nonce().
@@ -50,35 +50,34 @@
 
 -type edge_bits()      :: aeminer_pow_cuckoo:edge_bits().
 
--type solution()       :: aeminer_pow_cuckoo:solution().
+-type pow()            :: aeminer_pow_cuckoo:solution().
 
 -opaque config()       :: aeminer_pow_cuckoo:config().
 
 -spec generate(block_hash(), block_version(), target(), nonce(),
                instance(), config()) ->
-    {ok, {nonce(), solution()}} | {error, no_solution | {runtime, term()}}.
+    {ok, {nonce(), pow()}} | {error, no_solution | {runtime, term()}}.
 generate(BlockHash, _BlockVersion, Target, Nonce, Instance, Config) ->
     Nonce1 = aestratum_nonce:value(Nonce),
     Target1 = aeminer_pow:integer_to_scientific(Target),
     aeminer_pow_cuckoo:generate(BlockHash, Target1, Nonce1, Config, Instance).
 
--spec verify(block_hash(), block_version(), nonce(), solution(),
-             target(), edge_bits()) ->
+-spec verify(block_hash(), block_version(), nonce(), pow(), target(), edge_bits()) ->
     boolean().
-verify(BlockHash, _BlockVersion, Nonce, Solution, Target, EdgeBits) ->
+verify(BlockHash, _BlockVersion, Nonce, Pow, Target, EdgeBits) ->
     Nonce1 = aestratum_nonce:value(Nonce),
     Target1 = aeminer_pow:integer_to_scientific(Target),
-    aeminer_pow_cuckoo:verify(BlockHash, Nonce1, Solution, Target1, EdgeBits).
+    aeminer_pow_cuckoo:verify(BlockHash, Nonce1, Pow, Target1, EdgeBits).
 
--spec verify_proof(block_hash(), block_version(), nonce(), solution(),
-                   edge_bits()) -> boolean().
-verify_proof(BlockHash, _BlockVersion, Nonce, Solution, EdgeBits) ->
+-spec verify_proof(block_hash(), block_version(), nonce(), pow(), edge_bits()) ->
+    boolean().
+verify_proof(BlockHash, _BlockVersion, Nonce, Pow, EdgeBits) ->
     Nonce1 = aestratum_nonce:value(Nonce),
-    aeminer_pow_cuckoo:verify_proof(BlockHash, Nonce1, Solution, EdgeBits).
+    aeminer_pow_cuckoo:verify_proof(BlockHash, Nonce1, Pow, EdgeBits).
 
--spec get_target(solution(), edge_bits()) -> target().
-get_target(Solution, EdgeBits) ->
-    aeminer_pow_cuckoo:get_target(Solution, EdgeBits).
+-spec get_target(pow(), edge_bits()) -> target().
+get_target(Pow, EdgeBits) ->
+    aeminer_pow_cuckoo:get_target(Pow, EdgeBits).
 
 -spec config(exec(), exec_group(), extra_args(), hex_enc_header(), repeats(),
              edge_bits(), instances()) -> config().

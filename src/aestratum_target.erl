@@ -9,6 +9,12 @@
          to_int/1
         ]).
 
+-export_type([int_target/0,
+              bin_target/0,
+              solve_time/0,
+              percent_change/0
+             ]).
+
 -include_lib("aeminer/include/aeminer.hrl").
 
 -define(MAX_TARGET, ?HIGHEST_TARGET_INT).
