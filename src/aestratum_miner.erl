@@ -65,9 +65,10 @@ hash_data(Data) ->
                instance(), config()) ->
     {ok, {nonce(), pow()}} | {error, no_solution | {runtime, term()}}.
 generate(BlockHash, _BlockVersion, Target, Nonce, Instance, Config) ->
+    BlockHash1 = to_bin(BlockHash),
     Nonce1 = aestratum_nonce:value(Nonce),
     Target1 = aeminer_pow:integer_to_scientific(Target),
-    aeminer_pow_cuckoo:generate_from_hash(BlockHash, Target1, Nonce1, Config, Instance).
+    aeminer_pow_cuckoo:generate_from_hash(BlockHash1, Target1, Nonce1, Config, Instance).
 
 -spec verify(block_hash(), block_version(), nonce(), pow(), target(), edge_bits()) ->
     boolean().
@@ -99,4 +100,13 @@ instances(Config) ->
 -spec repeats(config()) -> repeats().
 repeats(Config) ->
     aeminer_pow_cuckoo:repeats(Config).
+
+to_bin(S) ->
+    to_bin(binary_to_list(S), []).
+
+to_bin([], Acc) ->
+    list_to_binary(lists:reverse(Acc));
+to_bin([X, Y | T], Acc) ->
+    {ok, [V], []} = io_lib:fread("~16u", [X, Y]),
+    to_bin(T, [V | Acc]).
 
