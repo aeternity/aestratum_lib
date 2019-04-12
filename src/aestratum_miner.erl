@@ -1,6 +1,7 @@
 -module(aestratum_miner).
 
--export([generate/6,
+-export([hash_data/1,
+         generate/6,
          verify/6,
          verify_proof/5,
          get_target/2
@@ -28,7 +29,9 @@
 
 -type nonce()          :: aestratum_nonce:nonce().
 
--type block_hash()     :: aeminer_pow_cuckoo:hashable().
+-type data()           :: aeminer_pow_cuckoo:hashable().
+
+-type block_hash()     :: aeminer_pow_cuckoo:hash().
 
 -type block_version()  :: pos_integer().
 
@@ -54,13 +57,17 @@
 
 -opaque config()       :: aeminer_pow_cuckoo:config().
 
+-spec hash_data(data()) -> block_hash().
+hash_data(Data) ->
+    aeminer_pow_cuckoo:hash_data(Data).
+
 -spec generate(block_hash(), block_version(), target(), nonce(),
                instance(), config()) ->
     {ok, {nonce(), pow()}} | {error, no_solution | {runtime, term()}}.
 generate(BlockHash, _BlockVersion, Target, Nonce, Instance, Config) ->
     Nonce1 = aestratum_nonce:value(Nonce),
     Target1 = aeminer_pow:integer_to_scientific(Target),
-    aeminer_pow_cuckoo:generate(BlockHash, Target1, Nonce1, Config, Instance).
+    aeminer_pow_cuckoo:generate_from_hash(BlockHash, Target1, Nonce1, Config, Instance).
 
 -spec verify(block_hash(), block_version(), nonce(), pow(), target(), edge_bits()) ->
     boolean().
