@@ -7,6 +7,19 @@
          to_id/1, to_id/2
         ]).
 
+-export_type([raw_msg/0,
+              req/0,
+              ntf/0,
+              raw_rsp/0,
+              rsp/0,
+              rsp_method/0,
+              error_enc_rsp/0,
+              error_dec_rsp/0,
+              reason/0,
+              opts/0,
+              id/0
+             ]).
+
 -define(ID_MIN, 0).
 -define(ID_MAX, 16#ffffffff).
 
