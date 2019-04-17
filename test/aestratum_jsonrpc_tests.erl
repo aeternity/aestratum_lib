@@ -56,7 +56,8 @@ jsonrpc_decode() ->
      vld_rsp(valid_rsp())].
 
 jsonrpc_encode() ->
-    [enc(invalid_configure_param()),
+    [enc(invalid_map()),
+     enc(invalid_configure_param()),
      enc(invalid_subscribe_param()),
      enc(invalid_authorize_param()),
      enc(invalid_submit_param()),
@@ -111,8 +112,7 @@ enc3(Data) ->
 parse_error() ->
     T = <<"parse error">>,
     R = parse_error,
-    L =
-        [<<>>,
+    L = [<<>>,
          <<"[1,2,3">>,
          <<"[100]}">>,
          <<"{\"\"\"jsonrpc\":\"2.0\"}">>,
@@ -122,8 +122,7 @@ parse_error() ->
 
 invalid_msg_no_id() ->
      T = <<"invalid message without id">>,
-     L =
-        [{<<"{}">>,
+     L = [{<<"{}">>,
           undefined},
          {<<"[1,2,3,{\"id\":4}]">>,
           undefined},
@@ -151,19 +150,28 @@ invalid_msg_no_id() ->
 
 invalid_msg_with_id() ->
     T = <<"invalid message with id">>,
-    L =
-        [{<<"{\"id\":10}">>, 10},
+    L = [{<<"{\"id\":10}">>, 10},
          {<<"{\"array\":[1,2,3],\"id\":123}">>, 123},
          {<<"{\"jsonrpc\":\"2.0\", \"id\": 0}">>, 0},
          {<<"{\"jsonrpc\":\"1.0\",\"id\":1,\"method\":\"mining.configure\",\"params\":[]}">>, 1},
          {<<"{\"json-RPC\":\"2.0\",\"id\": 20,\"result\":null,\"error\":null}">>, 20},
-         {<<"{\"jsonrpc\":\"2.0\",\"id\":0,\"result\":false,\"error\":[20,\"Error!\",null]}">>, 0}],
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":0,\"result\":false,\"error\":[20,\"Error!\",null]}">>, 0},
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"mining.configure\",\"params\":[],\"x\":\"y\"}">>, 0},
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.subscribe\",\"params\":["
+            "\"miner/1.0.0\",null,\"aeternity.pool.com\",65535],\"extra\":100}">>, 1},
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"mining.authorize\",\"params\":["
+            "\"ak_nv5B93FPzRHrGNmMdTDfGdd5xGZvep3MVSpJqzcQmMp59bBCv\",null],\"params2\":[]}">>, 3},
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"mining.submit\",\"params\":["
+            "\"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt\",\"ABCDEF0123456789\","
+            "\"1234567890AB\",[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,"
+            "24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]],\"foo\":\"bar\"}">>, 4},
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"client.reconnect\",\"params\":[],\"extra\":0}">>, 5},
+         {<<"{\"jsonrpc\":\"2.0\",\"id\":200,\"error\":null,\"result\":[],\"additional\":12345}">>, 200}],
     [{T, B, #{}, {error, {invalid_msg, I}}} || {B, I} <- L].
 
 invalid_method() ->
     T = <<"invalid method">>,
-    L =
-        [{<<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"foo\",\"params\":[]}">>, 1},
+    L = [{<<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"foo\",\"params\":[]}">>, 1},
          {<<"{\"jsonrpc\":\"2.0\",\"id\":10,\"method\":12345,\"params\":[null]}">>, 10}],
     [{T, B, #{}, {error, {invalid_method, I}}} || {B, I} <- L].
 
@@ -174,8 +182,7 @@ invalid_params(subscribe) ->
     T = <<"invalid params - subscribe">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.subscribe\",\"params\":">>,
     I = 1,
-    L =
-        [[],
+    L = [[],
          [?HEX_VALID_16],
          [<<"x">>, null],
          [<<"aeminer/1">>, ?HEX_VALID_16, <<"aepool.com">>],
@@ -185,8 +192,7 @@ invalid_params(authorize) ->
     T = <<"invalid params - authorize">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.authorize\",\"params\":">>,
     I = 1,
-    L =
-        [[],
+    L = [[],
          [null],
          [?HEX_VALID_64, 1234, true]],
     [{T, bin(B, P), #{}, {error, {invalid_param, authorize_params, I}}} || P <- L];
@@ -194,8 +200,7 @@ invalid_params(submit) ->
     T = <<"invalid params - submit">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.submit\",\"params\":">>,
     I = 1,
-    L =
-        [[],
+    L = [[],
          [?HEX_VALID_16],
          [?HEX_INVALID_16, false],
          [[], ?HEX_VALID_16, lists:seq(1, 42)],
@@ -205,8 +210,7 @@ invalid_params(reconnect) ->
     T = <<"invalid params - reconnect">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"client.reconnect\",\"params\":">>,
     I = 1,
-    L =
-        [[[]],
+    L = [[[]],
          [<<>>],
          [<<"foo">>, 9999],
          [null, 9999, 100, 200]],
@@ -215,8 +219,7 @@ invalid_params(set_target) ->
     T = <<"invalid params - set_target">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":null,\"method\":\"mining.set_target\",\"params\":">>,
     I = null,
-    L =
-        [[],
+    L = [[],
          [<<>>, <<>>],
          [true, false, false]],
     [{T, bin(B, P), #{}, {error, {invalid_param, set_target_params, I}}} || P <- L];
@@ -224,21 +227,45 @@ invalid_params(notify) ->
     T = <<"invalid params - notify">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":null,\"method\":\"mining.notify\",\"params\":">>,
     I = null,
-    L =
-        [[],
+    L = [[],
          [null],
          [?HEX_VALID_16, 1],
          [?HEX_VALID_64, true, 10],
          [?HEX_VALID_16, 1, ?HEX_VALID_64, true, <<>>]],
     [{T, bin(B, P), #{}, {error, {invalid_param, notify_params, I}}} || P <- L].
 
+invalid_map() ->
+    T = <<"invalid map">>,
+    L = [{#{type => req, method => configure, id => 1, params => [], foo => bar}, 1},
+         {#{type => req, method => subscribe, id => 2,
+            params => [<<"miner/1.0">>, ?HEX_VALID_16, <<"aepool.com">>, 1234],
+            additional => 100}, 2},
+         {#{type => req, method => authorize, id => 3,
+            params => [<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod9mJS7Y">>, null],
+            extra => true}, 3},
+         {#{type => req, method => submit, id => 4,
+            params => [?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)],
+            foo => <<"bar">>}, 4},
+         {#{type => req, method => reconnect, id => 5, host => null, port => null,
+            wait_time => 0, x => 10}, 5},
+         {#{type => ntf, method => set_target,
+            target => <<"ffff000000000000000000000000000000000000000000000000000000000000">>,
+            aaa => []}, undefined},
+         {#{type => ntf, method => notify, id => null, job_id => <<"0123456789abcdef">>,
+            block_version => 1,
+            block_hash => <<"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef">>,
+            empty_queue => true, another_field => <<"field">>}, null},
+         {#{type => rsp, method => configure, id => 10, result => [], result2 => []}, 10},
+         {#{type => rsp, method => submit, id => 11, reason => internal_error,
+            msg => <<"Internal error">>, data => <<"Server crash">>, data_extra => <<"x">>}, 11}],
+    [{T, undefined, M, {error, {invalid_msg, I}}} || {M, I} <- L].
+
 invalid_configure_param() ->
     T = <<"invalid configure request param">>,
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"mining.configure\",\"params\":">>,
     I = 0,
     M = #{type => req, id => I, method => configure},
-    L =
-        [{[null], configure_params},
+    L = [{[null], configure_params},
          {[<<>>], configure_params},
          {[<<"param">>], configure_params},
          {[<<"x">>, <<"y">>], configure_params}],
@@ -249,8 +276,7 @@ invalid_subscribe_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.subscribe\",\"params\":">>,
     I = 1,
     M = #{type => req, id => I, method => subscribe},
-    L =
-        [{[<<>>, ?HEX_VALID_16, <<"aepool.com">>, 9876], user_agent},
+    L = [{[<<>>, ?HEX_VALID_16, <<"aepool.com">>, 9876], user_agent},
          {[<<"ae\nminer">>, ?HEX_VALID_16, <<"aepool.com">>, 9876], user_agent},
          {[<<"    ">>, ?HEX_VALID_16, <<"aepool.com">>, 9876], user_agent},
          {[0, ?HEX_VALID_16, <<"aepool.com">>, 9876], user_agent},
@@ -278,8 +304,7 @@ invalid_authorize_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.authorize\",\"params\":">>,
     I = 1,
     M = #{type => req, id => I, method => authorize},
-    L =
-        [{[<<>>, null], user},
+    L = [{[<<>>, null], user},
          {[null, null], user},
          {[<<"user ">>, null], user},
          {[<<"\t\t\s\v">>, null], user},
@@ -299,8 +324,7 @@ invalid_submit_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"mining.submit\",\"params\":">>,
     I = 1,
     M = #{type => req, id => I, method => submit},
-    L =
-        [{[<<>>, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)], user},
+    L = [{[<<>>, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)], user},
          {[false, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)], user},
          {[1234, ?HEX_VALID_16, <<"aepool.com">>, 9876], user},
          {[<<" x ">>, ?HEX_VALID_16, <<"aepool.com">>, 9876], user},
@@ -333,8 +357,7 @@ invalid_reconnect_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"client.reconnect\",\"params\":">>,
     I = 1,
     M = #{type => req, id => I, method => reconnect},
-    L =
-        [{[<<>>, 9999, 100], host},
+    L = [{[<<>>, 9999, 100], host},
          {[8904321, 9999, 100], host},
          {[false, 9999, 100], host},
          {[[$x], 9999, 100], host},
@@ -357,8 +380,7 @@ invalid_set_target_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":null,\"method\":\"mining.set_target\",\"params\":">>,
     I = null,
     M = #{type => ntf, id => I, method => set_target},
-    L =
-        [{[<<>>], target},
+    L = [{[<<>>], target},
          {[1234], target},
          {[?HEX_VALID_16], target},
          {[<<?HEX_VALID_64/binary, <<$a>>/binary>>], target},
@@ -372,8 +394,7 @@ invalid_notify_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":null,\"method\":\"mining.notify\",\"params\":">>,
     I = null,
     M = #{type => ntf, id => I, method => notify},
-    L =
-        [{[<<>>, 1, ?HEX_VALID_64, true], job_id},
+    L = [{[<<>>, 1, ?HEX_VALID_64, true], job_id},
          {[7895234432, 1, ?HEX_VALID_64, true], job_id},
          {[null, 1, ?HEX_VALID_64, true], job_id},
          {[true, 1, ?HEX_VALID_64, true], job_id},
@@ -404,8 +425,7 @@ invalid_success_result_param(configure) ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":null,\"result\":">>,
     I = 1,
     M = #{type => rsp, id => I},
-    L =
-        [{[<<>>], configure_params},
+    L = [{[<<>>], configure_params},
          {[null], configure_params},
          {[<<"something">>], configure_params}],
     [{T, bin(B, P), M#{method => configure, result => P},
@@ -416,8 +436,7 @@ invalid_success_result_param(subscribe) ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":null,\"result\":">>,
     I = 1,
     M = #{type => rsp, id => I},
-    L =
-        [{[<<>>, ?HEX_VALID_8], session_id},
+    L = [{[<<>>, ?HEX_VALID_8], session_id},
          {[true, ?HEX_VALID_8], session_id},
          {[<<"id">>, ?HEX_VALID_8], session_id},
          {[443243, ?HEX_VALID_8], session_id},
@@ -439,8 +458,7 @@ invalid_success_result_param(authorize) ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":null,\"result\":">>,
     I = 1,
     M = #{type => rsp, id => I},
-    L =
-        [{12345, authorize_params},
+    L = [{12345, authorize_params},
          {[[]], authorize_params},
          {<<"foo">>, authorize_params},
          {<<"true">>, authorize_params},
@@ -454,8 +472,7 @@ invalid_success_result_param(submit) ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":null,\"result\":">>,
     I = 1,
     M = #{type => rsp, id => I},
-    L =
-        [{0, submit_params},
+    L = [{0, submit_params},
          {<<"foo">>, submit_params},
          {[[[]]], submit_params},
          {<<"false">>, submit_params},
@@ -470,8 +487,7 @@ invalid_decode_error_result_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":null,\"error\":">>,
     I = 1,
     M = #{type => rsp, id => I},
-    L =
-        [{[<<>>, <<"Error msg">>, null], error_code},
+    L = [{[<<>>, <<"Error msg">>, null], error_code},
          {[null, <<"Error msg">>, null], error_code},
          {[0, <<"Error msg">>, null], error_code},
          {[100000, <<"Error msg">>, null], error_code},
@@ -488,8 +504,7 @@ invalid_encode_error_result_param() ->
     B = <<"{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":null,\"error\":">>,
     I = 1,
     M = #{type => rsp, id => I},
-    L =
-        [{[<<>>, null], error_reason},
+    L = [{[<<>>, null], error_reason},
          {[null, null], error_reason},
          {[0, null], error_reason},
          {[100000, null], error_reason},
@@ -500,8 +515,7 @@ invalid_encode_error_result_param() ->
 
 valid_req() ->
     T = <<"valid client request">>,
-    L =
-        [%% configure
+    L = [%% configure
          {<<"{\"jsonrpc\":\"2.0\",\"id\":0,\"method\":\"mining.configure\",\"params\":[]}">>,
           #{type => req, method => configure, id => 0, params => []}},
          %% subscribe
@@ -522,8 +536,8 @@ valid_req() ->
          %% submit
          {<<"{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"mining.submit\",\"params\":["
             "\"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt\",\"ABCDEF0123456789\","
-		    "\"1234567890AB\",[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,"
-			"24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]]}">>,
+            "\"1234567890AB\",[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,"
+            "24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]]}">>,
           #{type => req, method => submit, id => 4,
             user => <<"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt">>,
             job_id => <<"abcdef0123456789">>, miner_nonce => <<"1234567890ab">>,
@@ -548,8 +562,7 @@ valid_req() ->
 
 valid_ntf() ->
     T = <<"valid notification">>,
-    L =
-        [%% set_target
+    L = [%% set_target
          {<<"{\"jsonrpc\":\"2.0\",\"id\":null,\"method\":\"mining.set_target\",\"params\":["
             "\"ffFF000000000000000000000000000000000000000000000000000000000000\"]}">>,
           #{type => ntf, method => set_target, id => null,
@@ -566,8 +579,7 @@ valid_ntf() ->
 
 valid_rsp() ->
     T = <<"valid response">>,
-    L =
-        [%% success result - configure
+    L = [%% success result - configure
          {<<"{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":null,\"result\":[]}">>,
           #{type => rsp, method => configure, id => 1, result => []},
           undefined},

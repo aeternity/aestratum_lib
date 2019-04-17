@@ -431,12 +431,16 @@ check_version(#{msg := _Msg}, _Opts) ->
 %% Client requests
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.configure">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_configure_req(Id, Params, Opts),
     #{type => req, method => configure, id => Id, params => Params};
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.subscribe">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_subscribe_req(Id, Params, Opts),
     [UserAgent, SessionId, Host, Port] = Params,
     #{type => req, method => subscribe, id => Id, user_agent => UserAgent,
@@ -444,14 +448,18 @@ msg_to_map(#{msg := #{<<"id">> := Id,
       port => Port};
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.authorize">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_authorize_req(Id, Params, Opts),
     [User, Password] = Params,
     #{type => req, method => authorize, id => Id, user => User,
       password => lowercase(Password)};
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.submit">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_submit_req(Id, Params, Opts),
     [User, JobId, MinerNonce, Pow] = Params,
     #{type => req, method => submit, id => Id, user => User,
@@ -460,7 +468,9 @@ msg_to_map(#{msg := #{<<"id">> := Id,
 %% Server requests
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"client.reconnect">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_reconnect_req(Id, Params, Opts),
     case Params of
         [] ->
@@ -473,14 +483,18 @@ msg_to_map(#{msg := #{<<"id">> := Id,
 %% Server notifications
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.set_target">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_set_target_ntf(Id, Params, Opts),
     [Target] = Params,
     #{type => ntf, method => set_target, id => null,
       target => lowercase(Target)};
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.notify">>,
-                      <<"params">> := Params}}, Opts) ->
+                      <<"params">> := Params} = Msg}, Opts) ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_notify_ntf(Id, Params, Opts),
     [JobId, BlockVersion, BlockHash, EmptyQueue] = Params,
     #{type => ntf, method => notify, id => null, job_id => lowercase(JobId),
@@ -489,7 +503,9 @@ msg_to_map(#{msg := #{<<"id">> := Id,
 %% Responses
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"result">> := Result,
-                      <<"error">> := null}}, Opts) when Result =/= null ->
+                      <<"error">> := null} = Msg}, Opts) when Result =/= null ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"result">>, <<"error">>], Msg),
     ok = check_id(int, Id, Opts),
     %% Result is not checked here, the check is done in
     %% validate_rsp_params/2. We don't have info about what
@@ -498,7 +514,9 @@ msg_to_map(#{msg := #{<<"id">> := Id,
     #{type => rsp, id => Id, result => Result};
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"result">> := null,
-                      <<"error">> := Error}}, Opts) when Error =/= null ->
+                      <<"error">> := Error} = Msg}, Opts) when Error =/= null ->
+    ok = check_fields(
+           [<<"jsonrpc">>, <<"id">>, <<"result">>, <<"error">>], Msg),
     ok = check_id(allow_null, Id, Opts),
     %% Error is not checked here, the check is done in
     %% validate_rsp_params/2. It could be done here though,
@@ -514,29 +532,35 @@ msg_to_map(_Data, _Opts) ->
     validation_exception(invalid_msg).
 
 map_to_msg(#{map := #{type := req, method := configure, id := Id,
-                      params := Params}} = Data, Opts) ->
+                      params := Params} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, params], Map),
     ok = check_configure_req(Id, Params, Opts),
     to_req_msg(<<"mining.configure">>, Id, Params, Data);
 map_to_msg(#{map := #{type := req, method := subscribe, id := Id,
                       user_agent := UserAgent, session_id := SessionId,
-                      host := Host, port := Port}} = Data, Opts) ->
+                      host := Host, port := Port} = Map} = Data, Opts) ->
+    ok = check_fields(
+           [type, method, id, user_agent, session_id, host, port], Map),
     Params = [UserAgent, SessionId, Host, Port],
     ok = check_subscribe_req(Id, Params, Opts),
     to_req_msg(<<"mining.subscribe">>, Id, Params, Data);
 map_to_msg(#{map := #{type := req, method := authorize, id := Id,
-                      user := User, password := Password}} = Data, Opts) ->
+                      user := User, password := Password} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, user, password], Map),
     Params = [User, Password],
     ok = check_authorize_req(Id, Params, Opts),
     to_req_msg(<<"mining.authorize">>, Id, Params, Data);
 map_to_msg(#{map := #{type := req, method := submit, id := Id,
                       user := User, job_id := JobId, miner_nonce := MinerNonce,
-                      pow := Pow}} = Data, Opts) ->
+                      pow := Pow} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, user, job_id, miner_nonce, pow], Map),
     Params = [User, JobId, MinerNonce, Pow],
     ok = check_submit_req(Id, Params, Opts),
     to_req_msg(<<"mining.submit">>, Id, Params, Data);
 map_to_msg(#{map := #{type := req, method := reconnect, id := Id,
                       host := Host, port := Port,
-                      wait_time := WaitTime}} = Data, Opts) ->
+                      wait_time := WaitTime} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, host, port, wait_time], Map),
     Params =
         case [Host, Port, WaitTime] of
             [null, null, 0] -> [];
@@ -545,22 +569,27 @@ map_to_msg(#{map := #{type := req, method := reconnect, id := Id,
     ok = check_reconnect_req(Id, Params, Opts),
     to_req_msg(<<"client.reconnect">>, Id, Params, Data);
 map_to_msg(#{map := #{type := ntf, method := set_target,
-                      target := Target}} = Data, Opts) ->
+                      target := Target} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, target], Map),
     ok = check_set_target_ntf(null, [Target], Opts),
     to_ntf_msg(<<"mining.set_target">>, [Target], Data);
 map_to_msg(#{map := #{type := ntf, method := notify, job_id := JobId,
                       block_version := BlockVersion, block_hash := BlockHash,
-                      empty_queue := EmptyQueue}} = Data, Opts) ->
+                      empty_queue := EmptyQueue} = Map} = Data, Opts) ->
+    ok = check_fields(
+           [type, method, id, job_id, block_version, block_hash, empty_queue], Map),
     Params = [JobId, BlockVersion, BlockHash, EmptyQueue],
     ok = check_notify_ntf(null, Params, Opts),
     to_ntf_msg(<<"mining.notify">>, Params, Data);
 map_to_msg(#{map := #{type := rsp, method := Method, id := Id,
-                      result := Result}} = Data, Opts) ->
+                      result := Result} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, result], Map),
     ok = check_id(int, Id, Opts),
     ok = check_result(Method, Result, Opts),
     to_result_rsp_msg(Id, Result, Data);
 map_to_msg(#{map := #{type := rsp, id := Id, reason := Rsn,
-                      data := ErrorData}} = Data, Opts) ->
+                      data := ErrorData} = Map} = Data, Opts) ->
+    ok = check_fields([type, method, id, reason, msg, data], Map),
     ok = check_id(allow_null, Id, Opts),
     ok = check_error_data(ErrorData, Opts),
     ErrorParams = reason_to_error_params(Rsn, ErrorData),
@@ -583,6 +612,13 @@ to_result_rsp_msg(Id, Result, Data) ->
 to_error_rsp_msg(Id, Error, Data) ->
     Data#{msg => #{<<"jsonrpc">> => ?JSONRPC_VERSION, <<"id">> => Id,
                    <<"result">> => null, <<"error">> => Error}}.
+
+check_fields(Fields, Map) ->
+    case maps:without(Fields, Map) of
+        M when map_size(M) =:= 0 -> ok;
+        %% There are some additional fields in the message, so it's invalid.
+        _Other                   -> validation_exception(invalid_msg)
+    end.
 
 check_configure_req(Id, [], Opts) ->
     ok = check_id(int, Id, Opts);
