@@ -28,12 +28,15 @@
 -define(PORT_MIN, 1).
 -define(PORT_MAX, 16#ffff).
 
-%% By default, the user name is a Base58check encoded account address. It has
+%% By default, the account is a Base58check encoded account address. It has
 %% a variable length, between 41 and 53 bytes including the 'ak_' prefix.
 %% The shortest encoding of a 32-byte byte array is 41 (all zeros so it is not
 %% a valid address though) and the max is 53.
--define(USER_MIN_SIZE, 41).
--define(USER_MAX_SIZE, 53).
+-define(ACCOUNT_MIN_SIZE, 41).
+-define(ACCOUNT_MAX_SIZE, 53).
+
+-define(WORKER_MIN_SIZE, 1).
+-define(WORKER_MAX_SIZE, 64).
 
 -define(USER_AGENT_MAX_SIZE, 64).
 
@@ -190,7 +193,11 @@
 -type maybe_null_port() :: integer_port()
                          | null.
 
--type user()            :: binary().
+-type user()            :: {account(), worker()}.
+
+-type account()         :: binary().
+
+-type worker()          :: binary().
 
 -type password()        :: binary()
                          | null.
@@ -466,7 +473,7 @@ msg_to_map(#{msg := #{<<"id">> := Id,
            [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_authorize_req(Id, Params, Opts),
     [User, Password] = Params,
-    #{type => req, method => authorize, id => Id, user => User,
+    #{type => req, method => authorize, id => Id, user => split_user(User),
       password => lowercase(Password)};
 msg_to_map(#{msg := #{<<"id">> := Id,
                       <<"method">> := <<"mining.submit">>,
@@ -475,7 +482,7 @@ msg_to_map(#{msg := #{<<"id">> := Id,
            [<<"jsonrpc">>, <<"id">>, <<"method">>, <<"params">>], Msg),
     ok = check_submit_req(Id, Params, Opts),
     [User, JobId, MinerNonce, Pow] = Params,
-    #{type => req, method => submit, id => Id, user => User,
+    #{type => req, method => submit, id => Id, user => split_user(User),
       job_id => lowercase(JobId), miner_nonce => lowercase(MinerNonce),
       pow => Pow};
 %% Server requests
@@ -562,14 +569,18 @@ map_to_msg(#{map := #{type := req, method := authorize, id := Id,
     ok = check_fields([type, method, id, user, password], Map),
     Params = [User, Password],
     ok = check_authorize_req(Id, Params, Opts),
-    to_req_msg(<<"mining.authorize">>, Id, Params, Data);
+    {Account, Worker} = User,
+    Params1 = [merge_user(Account, Worker), Password],
+    to_req_msg(<<"mining.authorize">>, Id, Params1, Data);
 map_to_msg(#{map := #{type := req, method := submit, id := Id,
                       user := User, job_id := JobId, miner_nonce := MinerNonce,
                       pow := Pow} = Map} = Data, Opts) ->
     ok = check_fields([type, method, id, user, job_id, miner_nonce, pow], Map),
     Params = [User, JobId, MinerNonce, Pow],
     ok = check_submit_req(Id, Params, Opts),
-    to_req_msg(<<"mining.submit">>, Id, Params, Data);
+    {Account, Worker} = User,
+    Params1 = [merge_user(Account, Worker), JobId, MinerNonce, Pow],
+    to_req_msg(<<"mining.submit">>, Id, Params1, Data);
 map_to_msg(#{map := #{type := req, method := reconnect, id := Id,
                       host := Host, port := Port,
                       wait_time := WaitTime} = Map} = Data, Opts) ->
@@ -723,7 +734,7 @@ is_user_agent(UserAgent, MaxSize) ->
         N when (N > 0) and (N =< MaxSize) ->
             case is_valid_string(UserAgent) of
                 true ->
-                    case binary:split(UserAgent, <<"/">>) of
+                    case binary:split(UserAgent, <<"/">>, [global]) of
                         [Client, Version] when
                               (Client =/= <<>>) and (Version =/= <<>>) ->
                             true;
@@ -794,22 +805,40 @@ is_port(Port, Min, Max) when (Port > Min) and (Port =< Max) ->
 is_port(_Port, _Min, _Max) ->
     false.
 
-check_user(User, Opts) when is_binary(User) ->
+check_user({Account, Worker}, Opts) ->
     %% TODO: consider other options for user, this only works for base58c user
     %% accounts.
-    MinSize = maps:get(user_min_size, Opts, ?USER_MIN_SIZE),
-    MaxSize = maps:get(user_max_size, Opts, ?USER_MAX_SIZE),
-    case is_user(User, MinSize, MaxSize) of
+    MinAccountSize = maps:get(account_min_size, Opts, ?ACCOUNT_MIN_SIZE),
+    MaxAccountSize = maps:get(account_max_size, Opts, ?ACCOUNT_MAX_SIZE),
+    MinWorkerSize = maps:get(worker_min_size, Opts, ?WORKER_MIN_SIZE),
+    MaxWorkerSize = maps:get(worker_max_size, Opts, ?WORKER_MAX_SIZE),
+    case is_account(Account, MinAccountSize, MaxAccountSize) and
+         is_worker(Worker, MinWorkerSize, MaxWorkerSize) of
         true  -> ok;
         false -> validation_exception({param, user})
+    end;
+check_user(User, Opts) when is_binary(User) ->
+    case binary:split(User, <<".">>, [global]) of
+        [Account, Worker] when (Account =/= <<>>) and (Worker =/= <<>>) ->
+            check_user({Account, Worker}, Opts);
+        _Other ->
+            validation_exception({param, user})
     end;
 check_user(_User, _Opts) ->
     validation_exception({param, user}).
 
-is_user(User, MinSize, MaxSize) ->
-    case byte_size(User) of
+is_account(Account, MinSize, MaxSize) ->
+    case byte_size(Account) of
         N when (N >= MinSize) and (N =< MaxSize) ->
-            is_valid_account(User);
+            is_valid_account(Account);
+        _Other ->
+            false
+    end.
+
+is_worker(Worker, MinSize, MaxSize) ->
+    case byte_size(Worker) of
+        N when (N >= MinSize) and (N =< MaxSize) ->
+            is_valid_worker(Worker);
         _Other ->
             false
     end.
@@ -1100,6 +1129,19 @@ is_valid_string(Bin) ->
 
 is_valid_account(<<"ak_", Base58/binary>>) ->
     base58:check_base58(binary_to_list(Base58)).
+
+is_valid_worker(Worker) ->
+    case re:run(Worker, "^[0-9A-Za-z]+$") of
+        {match, _} -> true;
+        nomatch    -> false
+    end.
+
+split_user(User) ->
+    [Account, Worker] = binary:split(User, <<".">>, [global]),
+    {Account, Worker}.
+
+merge_user(Account, Worker) ->
+    list_to_binary([Account, $., Worker]).
 
 lowercase(Bin) when is_binary(Bin) ->
     string:lowercase(Bin);

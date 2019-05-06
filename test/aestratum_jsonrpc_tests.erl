@@ -14,6 +14,8 @@
                           ?HEX_INVALID_16/binary, ?HEX_INVALID_16/binary>>).
 
 -define(ACCOUNT_VALID, <<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod5mJS7Y">>).
+-define(WORKER_VALID, <<"worker1">>).
+-define(USER_VALID, list_to_binary([?ACCOUNT_VALID, $., ?WORKER_VALID])).
 
 jsonrpc_test_() ->
     {setup,
@@ -310,11 +312,15 @@ invalid_authorize_param() ->
          {[<<"\t\t\s\v">>, null], user},
          {[1234, null], user},
          {[binary:copy(<<$a>>, 65), null], user},
-         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod5mJS7Y">>, <<>>], password},
-         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod6mJS7Y">>, 1324], password},
-         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod7mJS7Y">>, <<"X">>], password},
-         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod8mJS7Y">>, ?HEX_VALID_16], password},
-         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod9mJS7Y">>, ?HEX_INVALID_64], password}],
+         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod6mJS7Y">>, 12], user},
+         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod6mJS7Y.">>, "foo"], user},
+         {[<<"ak_zrHosArjUGvPYvg9WoT5KNEoJmoJEsXfaDu7TQLHtod6mJS7Y. $">>, "bar"], user},
+         {[list_to_binary([?ACCOUNT_VALID, $., binary:copy(<<$a>>, 65)]), <<"pwd">>], user},
+         {[?USER_VALID, <<>>], password},
+         {[?USER_VALID, 1324], password},
+         {[?USER_VALID, <<"X">>], password},
+         {[?USER_VALID, ?HEX_VALID_16], password},
+         {[?USER_VALID, ?HEX_INVALID_64], password}],
     [{T, bin(B, P), M#{user => P1, password => P2},
       {error, {invalid_param, R, I}}
      } || {[P1, P2] = P, R} <- L].
@@ -328,26 +334,26 @@ invalid_submit_param() ->
          {[false, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)], user},
          {[1234, ?HEX_VALID_16, <<"aepool.com">>, 9876], user},
          {[<<" x ">>, ?HEX_VALID_16, <<"aepool.com">>, 9876], user},
-         {[binary:copy(<<$1>>, 65), ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)], user},
-         {[?ACCOUNT_VALID, <<>>, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
-         {[?ACCOUNT_VALID, 4894132, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
-         {[?ACCOUNT_VALID, <<"error string">>, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
-         {[?ACCOUNT_VALID, null, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
-         {[?ACCOUNT_VALID, ?HEX_INVALID_16, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, <<>>, lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, <<"0">>, lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, <<"012">>, lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, null, lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, [], lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_INVALID_8, lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_16, lists:seq(1, 42)], miner_nonce},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, <<>>], pow},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, [0,1,2]], pow},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, null], pow},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 41)], pow},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, [4294967296 | lists:seq(1, 41)]], pow},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, [-1 | lists:seq(1, 41)]], pow},
-         {[?ACCOUNT_VALID, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 43)], pow}],
+         {[?WORKER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 42)], user},
+         {[?USER_VALID, <<>>, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
+         {[?USER_VALID, 4894132, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
+         {[?USER_VALID, <<"error string">>, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
+         {[?USER_VALID, null, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
+         {[?USER_VALID, ?HEX_INVALID_16, ?HEX_VALID_8, lists:seq(1, 42)], job_id},
+         {[?USER_VALID, ?HEX_VALID_16, <<>>, lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, <<"0">>, lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, <<"012">>, lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, null, lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, [], lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_INVALID_8, lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_16, lists:seq(1, 42)], miner_nonce},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, <<>>], pow},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, [0,1,2]], pow},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, null], pow},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 41)], pow},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, [4294967296 | lists:seq(1, 41)]], pow},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, [-1 | lists:seq(1, 41)]], pow},
+         {[?USER_VALID, ?HEX_VALID_16, ?HEX_VALID_8, lists:seq(1, 43)], pow}],
     [{T, bin(B, P), M#{user => P1, job_id => P2, miner_nonce => P3, pow => P4},
       {error, {invalid_param, R, I}}
      } || {[P1, P2, P3, P4] = P, R} <- L].
@@ -529,17 +535,17 @@ valid_req() ->
             session_id => <<"0123456789abcdef">>, host => <<"aepool.com">>, port => 9876}},
          %% authorize
          {<<"{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"mining.authorize\",\"params\":["
-            "\"ak_nv5B93FPzRHrGNmMdTDfGdd5xGZvep3MVSpJqzcQmMp59bBCv\",null]}">>,
+            "\"ak_nv5B93FPzRHrGNmMdTDfGdd5xGZvep3MVSpJqzcQmMp59bBCv.worker1\",null]}">>,
           #{type => req, method => authorize, id => 3,
-            user => <<"ak_nv5B93FPzRHrGNmMdTDfGdd5xGZvep3MVSpJqzcQmMp59bBCv">>,
+            user => {<<"ak_nv5B93FPzRHrGNmMdTDfGdd5xGZvep3MVSpJqzcQmMp59bBCv">>, <<"worker1">>},
             password => null}},
          %% submit
          {<<"{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"mining.submit\",\"params\":["
-            "\"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt\",\"ABCDEF0123456789\","
+            "\"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt.worker2\",\"ABCDEF0123456789\","
             "\"1234567890AB\",[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,"
             "24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]]}">>,
           #{type => req, method => submit, id => 4,
-            user => <<"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt">>,
+            user => {<<"ak_542o93BKHiANzqNaFj6UurrJuDuxU61zCGr9LJCwtTUg34kWt">>, <<"worker2">>},
             job_id => <<"abcdef0123456789">>, miner_nonce => <<"1234567890ab">>,
             pow => lists:seq(1, 42)}},
          %% reconnect
