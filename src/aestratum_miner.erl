@@ -81,7 +81,7 @@ verify(BlockHash, _BlockVersion, Nonce, Pow, Target, EdgeBits) ->
     boolean().
 verify_proof(BlockHash, _BlockVersion, Nonce, Pow, EdgeBits) ->
     Nonce1 = aestratum_nonce:value(Nonce),
-    aeminer_pow_cuckoo:verify_proof(BlockHash, Nonce1, Pow, EdgeBits).
+    aeminer_pow_cuckoo:verify_proof_from_hash(BlockHash, Nonce1, Pow, EdgeBits).
 
 -spec get_target(pow(), edge_bits()) -> target().
 get_target(Pow, EdgeBits) ->
