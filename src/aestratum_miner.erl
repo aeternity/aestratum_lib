@@ -65,7 +65,7 @@ hash_data(Data) ->
                instance(), config()) ->
     {ok, {nonce(), pow()}} | {error, no_solution | {runtime, term()}}.
 generate(BlockHash, _BlockVersion, Target, Nonce, Instance, Config) ->
-    BlockHash1 = to_bin(BlockHash),
+    BlockHash1 = aestratum_utils:hex_to_bin(BlockHash),
     Nonce1 = aestratum_nonce:value(Nonce),
     Target1 = aeminer_pow:integer_to_scientific(Target),
     aeminer_pow_cuckoo:generate_from_hash(BlockHash1, Target1, Nonce1, Config, Instance).
@@ -80,7 +80,7 @@ verify(BlockHash, _BlockVersion, Nonce, Pow, Target, EdgeBits) ->
 -spec verify_proof(block_hash(), block_version(), nonce(), pow(), edge_bits()) ->
     boolean().
 verify_proof(BlockHash, _BlockVersion, Nonce, Pow, EdgeBits) ->
-    BlockHash1 = to_bin(BlockHash),
+    BlockHash1 = aestratum_utils:hex_to_bin(BlockHash),
     Nonce1 = aestratum_nonce:value(Nonce),
     aeminer_pow_cuckoo:verify_proof_from_hash(BlockHash1, Nonce1, Pow, EdgeBits).
 
@@ -101,13 +101,4 @@ instances(Config) ->
 -spec repeats(config()) -> repeats().
 repeats(Config) ->
     aeminer_pow_cuckoo:repeats(Config).
-
-to_bin(S) ->
-    to_bin(binary_to_list(S), []).
-
-to_bin([], Acc) ->
-    list_to_binary(lists:reverse(Acc));
-to_bin([X, Y | T], Acc) ->
-    {ok, [V], []} = io_lib:fread("~16u", [X, Y]),
-    to_bin(T, [V | Acc]).
 

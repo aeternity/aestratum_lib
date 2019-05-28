@@ -6,6 +6,8 @@
          is_valid_string/1
         ]).
 
+-export([hex_to_bin/1]).
+
 -export_type([timestamp/0]).
 
 -type timestamp() :: pos_integer().
@@ -32,4 +34,14 @@ is_valid_string(Bin) when is_binary(Bin) ->
                  (Byte) when Byte =:= $\f -> false;
                  (Byte) when Byte =:= $\r -> false;
                  (_Byte) -> true end, binary_to_list(Bin)).
+
+-spec hex_to_bin(binary()) -> binary().
+hex_to_bin(S) ->
+    hex_to_bin(binary_to_list(S), []).
+
+hex_to_bin([], Acc) ->
+    list_to_binary(lists:reverse(Acc));
+hex_to_bin([X, Y | T], Acc) ->
+    {ok, [V], []} = io_lib:fread("~16u", [X, Y]),
+    hex_to_bin(T, [V | Acc]).
 
