@@ -369,8 +369,7 @@ run(Funs, Data0, Opts) ->
             validation_error(Rsn, Data0, Opts);
         throw:{encode_error, Rsn} ->
             encode_error(Rsn, Data0, Opts);
-        error:Rsn ->
-            ST = erlang:get_stacktrace(),
+        error:Rsn:ST ->
             internal_error(Rsn, ST, Data0, Opts)
     end.
 
