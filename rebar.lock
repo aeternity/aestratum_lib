@@ -10,7 +10,7 @@
   1},
  {<<"aeminer">>,
   {git,"https://github.com/aeternity/aeminer.git",
-      {ref,"0a82f0fd90fe5fe1f392d58b3cf98af08862f075"}},
+      {ref,"33be529b68f63c494136e69cf42f9842ccf3fc5d"}},
   0},
  {<<"base58">>,
   {git,"https://github.com/aeternity/erl-base58.git",
@@ -20,16 +20,12 @@
   {git,"https://github.com/aeternity/enacl.git",
       {ref,"67fceef42c0d055570f2e67b571f8d1f8de2f204"}},
   1},
- {<<"goldrush">>,{pkg,<<"goldrush">>,<<"0.1.9">>},2},
+ {<<"hut">>,{pkg,<<"hut">>,<<"1.3.0">>},1},
  {<<"jsx">>,
   {git,"https://github.com/talentdeficit/jsx.git",
       {ref,"fc2a001073f2300ba38427c23e83d5673c020542"}},
-  0},
- {<<"lager">>,
-  {git,"https://github.com/erlang-lager/lager.git",
-      {ref,"fae53399253da622afde3bf5fb5ff124b7d887fa"}},
-  1}]}.
+  0}]}.
 [
 {pkg_hash,[
- {<<"goldrush">>, <<"F06E5D5F1277DA5C413E84D5A2924174182FB108DABB39D5EC548B27424CD106">>}]}
+ {<<"hut">>, <<"71F2F054E657C03F959CF1ACC43F436EA87580696528CA2A55C8AFB1B06C85E7">>}]}
 ].
